@@ -1,4 +1,8 @@
+using AsyncProductAPI.Dtos;
+using AsyncProductAPI.Models;
 using AsyncProductAPI.Persistance;
+using AsyncProductAPI.Repositories;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,8 +25,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+#region old
 
-var summaries = new[]
+/*var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
 };
@@ -39,12 +44,40 @@ app.MapGet("/weatherforecast", () =>
         .ToArray();
     return forecast;
 })
-.WithName("GetWeatherForecast")
-.WithOpenApi();
+.WithName("GetWeatherForecast")do
+.WithOpenApi();*/
+#endregion
+
+app.MapPost("api/v1/products", async (ProductRepository repository, ListingRequest request) =>
+{
+    if (request == null)
+    {
+        return Results.BadRequest();
+    }
+
+    ListProduct product = new ListProduct
+    {
+        PorductDetails = request.RequestBody
+    };
+
+    await repository.AddProducts(product);
+
+    Guid requestId = Guid.NewGuid();
+
+    ListingResponse response = new ListingResponse
+    {
+        RequestStatus = "ACCEPTED",
+        EstimatedCompletionTime =  DateTime.Now.AddMinutes(60),
+        RequestId = requestId
+    };
+
+    return Results.Accepted($"api/v1/product-status/{requestId}", response);
+
+});
 
 app.Run();
 
-internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+/*internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
+}*/

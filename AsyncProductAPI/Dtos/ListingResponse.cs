@@ -2,7 +2,7 @@
 {
     public class ListingResponse
     {
-        public string? EstimatedCompletionTime { get; set; }
+        public DateTime EstimatedCompletionTime { get; set; }
         public string? RequestStatus { get; set; }
         public Guid RequestId { get; set; } = Guid.NewGuid();
     }
