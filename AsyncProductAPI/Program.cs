@@ -4,11 +4,13 @@ using AsyncProductAPI.Persistance;
 using AsyncProductAPI.Repositories;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+using AsyncProductAPI.Utils;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlServer(builder.Configuration.GetConnectionString("SQLConnectionString")));
+builder.Services.AddScoped<ProductRepository, ProductRepository>();
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -48,6 +50,7 @@ app.MapGet("/weatherforecast", () =>
 .WithOpenApi();*/
 #endregion
 
+//start endpoint
 app.MapPost("api/v1/products", async (ProductRepository repository, ListingRequest request) =>
 {
     if (request == null)
@@ -57,7 +60,7 @@ app.MapPost("api/v1/products", async (ProductRepository repository, ListingReque
 
     ListProduct product = new ListProduct
     {
-        PorductDetails = request.RequestBody
+        ProductDetails = request.RequestBody
     };
 
     await repository.AddProducts(product);
@@ -73,6 +76,31 @@ app.MapPost("api/v1/products", async (ProductRepository repository, ListingReque
 
     return Results.Accepted($"api/v1/product-status/{requestId}", response);
 
+});
+
+//status endpoint
+app.MapGet("api/v1/product-status/{requestId}", async (ProductRepository repository, string requestId) =>
+{
+    var product = await repository.GetProductsByRequestId(Guid.Parse(requestId));
+    if(product == null)
+    {
+        return Results.NotFound();
+    }
+
+    ListingResponse response = new ListingResponse
+    {
+        RequestStatus = product.RequestStatus,
+        RequestId = Guid.Parse(requestId)
+    };
+
+    if(product.RequestStatus == Constants.COMPLETED)
+    {
+        response.RequestStatus = Constants.COMPLETED;
+        response.FinalEndpoint = new Uri($"{Constants.finalEndpoint}/{product.Id}");
+        return Results.Created(response.FinalEndpoint, response);
+    }
+
+    return Results.Ok(response);
 });
 
 app.Run();

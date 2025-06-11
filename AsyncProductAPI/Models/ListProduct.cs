@@ -7,8 +7,10 @@ namespace AsyncProductAPI.Models
         [Key]
         public int Id { get; set; }
 
-        public string? PorductDetails { get; set; }
+        public string? ProductDetails { get; set; }
 
         public string? RequestStatus { get; set; }
+
+        public Guid RequestId { get; set; }
     }
 }

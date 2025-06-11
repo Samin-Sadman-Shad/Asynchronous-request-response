@@ -23,5 +23,11 @@ namespace AsyncProductAPI.Repositories
             var products = await _context.FindAsync<ListProduct>();
             return products;
         }
+
+        public async Task<ListProduct> GetProductsByRequestId(Guid RequestId)
+        {
+            var product = _context.Products.FirstOrDefault(lp => lp.RequestId == RequestId);
+            return product;
+        }
     }
 }
