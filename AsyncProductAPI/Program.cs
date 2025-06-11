@@ -97,9 +97,26 @@ app.MapGet("api/v1/product-status/{requestId}", async (ProductRepository reposit
     {
         response.RequestStatus = Constants.COMPLETED;
         response.FinalEndpoint = new Uri($"{Constants.finalEndpoint}/{product.Id}");
-        return Results.Created(response.FinalEndpoint, response);
+        //return Results.Created(response.FinalEndpoint, response);
+        return Results.RedirectToRoute(response.FinalEndpoint.ToString());
     }
 
+    return Results.Ok(response);
+});
+
+//final endpoint
+app.MapGet($"{Constants.finalEndpoint}/{{productId}}", async (ProductRepository repository, int productId) =>
+{
+    var product = await repository.GetProductById(productId);
+    if(product is null)
+    {
+        return Results.NotFound();
+    }
+    var response = new ListingSuccessResponse
+    {
+        RequestStatus = "SUCCESSFUL",
+        ProductDetails = product.ProductDetails
+    };
     return Results.Ok(response);
 });
 
